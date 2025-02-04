@@ -1,6 +1,6 @@
 # Zygisk-Il2CppDumper
 Zygisk版Il2CppDumper，在游戏运行时dump il2cpp数据，可以绕过保护，加密以及混淆。
-
+原创(https://github.com/Perfare/Zygisk-Il2CppDumper)，我只是更改了一下，以适应现在新的github
 ## 如何食用
 1. 安装[Magisk](https://github.com/topjohnwu/Magisk) v24以上版本并开启Zygisk
 2. 生成模块
