@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
       inputs:
         package_name:com.YoStarJP.Arknights
-          description: "com.YoStarJP.Arknights:"
+          description: "明日方舟日服:"
           required: true
 
 jobs:
