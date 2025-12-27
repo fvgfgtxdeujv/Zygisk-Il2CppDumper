@@ -1,10 +1,11 @@
 name: Build
 on:
   workflow_dispatch:
-      inputs:
-        package_name:
-          description: "Package name of the game:"
-          required: true
+    inputs:
+      package_name:
+        description: "Package name of the game (e.g., com.miniclip.eightballpool):"
+        required: true
+        default: "com.miniclip.eightballpool"
 
 jobs:
   build:
@@ -12,20 +13,29 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
-        distribution: temurin
-        java-version: 11
-        cache: gradle
+        distribution: 'temurin'
+        java-version: '11'
+        cache: 'gradle'
+
     - name: Build and replace package name
       run: |
         chmod +x ./gradlew
+        # Update the module description in Magisk
         sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
-        sed -i "s/com.game.packagename/${{ github.event.inputs.package_name }}/g" module/src/main/cpp/game.h
+        
+        # Replace the default package name with the game's package name
+        sed -i 's/GamePackageName = ".*"/GamePackageName = "${{ github.event.inputs.package_name }}"/g' module/src/main/cpp/game.h
+        
+        # Start the build process
         ./gradlew :module:assembleRelease
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: zygisk-il2cppdumper
+        name: zygisk-il2cppdumper-8ball
         path: out/magisk_module_release/
+        
