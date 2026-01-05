@@ -1,0 +1,59 @@
+name: Build Zygisk Dumper
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: "Package name of the game (e.g., com.miniclip.eightballpool):"
+        required: true
+        default: "com.miniclip.eightballpool"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive' # لضمان تحميل كافة الملفات الفرعية للمشروع
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17' # استخدام إصدار 17 هو الأفضل لمعظم مشاريع Gradle الحديثة
+        cache: 'gradle'
+
+    - name: Build and replace package name
+      run: |
+        chmod +x ./gradlew
+        
+        # تعديل وصف الموديول في gradle
+        if [ -f "module.gradle" ]; then
+          sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
+        fi
+        
+        # تغيير اسم الحزمة لاستهداف 8 Ball Pool
+        # تأكد أن المسار هو module/src/main/cpp/game.h
+        sed -i 's/GamePackageName = ".*"/GamePackageName = "${{ github.event.inputs.package_name }}"/g' module/src/main/cpp/game.h
+        
+        # بناء الموديول بنسخة Release
+        ./gradlew :module:assembleRelease
+
+    - name: Prepare Artifact
+      run: |
+        # إنشاء مجلد للمخرجات لضمان وجود المسار
+        mkdir -p out/
+        # البحث عن ملف الـ zip الناتج ونسخه للمجلد الموحد
+        find module/build/outputs/ -name "*.zip" -exec cp {} out/magisk_module_release.zip \;
+        # في حال لم يجد ملف zip، يبحث عن الـ apk أو المخرجات الافتراضية
+        if [ ! -f out/magisk_module_release.zip ]; then
+          cp -r module/build/outputs/magisk/release/*.zip out/magisk_module_release.zip || true
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: zygisk-il2cppdumper-8ball
+        path: out/magisk_module_release.zip
+        
