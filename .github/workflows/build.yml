@@ -1,10 +1,12 @@
-name: Build
+name: Build 8BP Dumper
+
 on:
   workflow_dispatch:
-      inputs:
-        package_name:
-          description: "Package name of the game:"
-          required: true
+    inputs:
+      package_name:
+        description: "Package name of the game:"
+        required: false
+        default: "com.miniclip.eightballpool"
 
 jobs:
   build:
@@ -12,20 +14,36 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 11
+        java-version: 17
         cache: gradle
+
     - name: Build and replace package name
       run: |
+        # Give execution permissions
         chmod +x ./gradlew
-        sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
-        sed -i "s/com.game.packagename/${{ github.event.inputs.package_name }}/g" module/src/main/cpp/game.h
+        
+        # Set Target Package
+        PACKAGE_NAME="${{ github.event.inputs.package_name }}"
+        echo "Targeting Package: $PACKAGE_NAME"
+        
+        # 1. Update Module Description to show the package name
+        sed -i "s/moduleDescription = \"/moduleDescription = \"($PACKAGE_NAME) /g" module.gradle
+        
+        # 2. Inject the package name into the C++ Header file (Crucial Step)
+        # This replaces the placeholder 'com.game.packagename' with 'com.miniclip.eightballpool'
+        sed -i "s/com.game.packagename/$PACKAGE_NAME/g" module/src/main/cpp/game.h
+        
+        # 3. Build the Release Module
         ./gradlew :module:assembleRelease
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: zygisk-il2cppdumper
-        path: out/magisk_module_release/
+        name: Zygisk-Dumper-8BP
+        # Captures all files in the release folder to avoid path errors
+        path: out/magisk_module_release/*
