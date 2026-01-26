@@ -1,4 +1,4 @@
-name: Build 8Ball Dumper Fixed
+name: Build 8Ball Dumper Radar
 on:
   workflow_dispatch:
 
@@ -8,23 +8,30 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 17
         cache: gradle
+        
     - name: Build Module
       run: |
         chmod +x ./gradlew
-        # حقن اسم اللعبة مباشرة
+        # حقن اسم اللعبة (Target Package)
         sed -i 's/moduleDescription = "/moduleDescription = "(com.miniclip.eightballpool) /g' module.gradle
         sed -i "s/com.game.packagename/com.miniclip.eightballpool/g" module/src/main/cpp/game.h
         # بدء البناء
         ./gradlew :module:assembleRelease
-    - name: Upload Artifact
+
+    - name: Upload ANY Zip Found
       uses: actions/upload-artifact@v4
+      if: always() # ينفذ الرفع حتى لو فشلت خطوات سابقة جزئياً
       with:
-        name: Zygisk-Dumper-8BP-2026
-        # التصحيح هنا: أشرنا للمجلد وليس لملف مضغوط
-        path: out/magisk_module_release/
+        name: All-Zygisk-Files
+        # هذا هو الرادار: سيبحث عن أي ملف مضغوط في المشروع بالكامل ويرفعه لك
+        path: |
+          **/*.zip
+          out/**/*.zip
+          module/build/outputs/**/*.zip
