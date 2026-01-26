@@ -1,10 +1,6 @@
-name: Build
+name: Build 8Ball Dumper 2026
 on:
   workflow_dispatch:
-      inputs:
-        package_name:
-          description: "Package name of the game:"
-          required: true
 
 jobs:
   build:
@@ -16,16 +12,17 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 11
+        java-version: 17
         cache: gradle
-    - name: Build and replace package name
+    - name: Inject 8 Ball Pool Target
       run: |
         chmod +x ./gradlew
-        sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
-        sed -i "s/com.game.packagename/${{ github.event.inputs.package_name }}/g" module/src/main/cpp/game.h
+        # هنا التعديل السحري: وضعنا اسم اللعبة مباشرة
+        sed -i 's/moduleDescription = "/moduleDescription = "(com.miniclip.eightballpool) /g' module.gradle
+        sed -i "s/com.game.packagename/com.miniclip.eightballpool/g" module/src/main/cpp/game.h
         ./gradlew :module:assembleRelease
-    - name: Upload artifact
+    - name: Upload Dumper
       uses: actions/upload-artifact@v4
       with:
-        name: zygisk-il2cppdumper
+        name: Zygisk-Dumper-8BP-2026
         path: out/magisk_module_release/
