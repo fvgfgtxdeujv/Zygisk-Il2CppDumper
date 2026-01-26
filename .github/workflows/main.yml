@@ -1,4 +1,4 @@
-name: Build 8Ball Dumper 2026
+name: Build 8Ball Dumper Fixed
 on:
   workflow_dispatch:
 
@@ -14,15 +14,17 @@ jobs:
         distribution: temurin
         java-version: 17
         cache: gradle
-    - name: Inject 8 Ball Pool Target
+    - name: Build Module
       run: |
         chmod +x ./gradlew
-        # هنا التعديل السحري: وضعنا اسم اللعبة مباشرة
+        # حقن اسم اللعبة مباشرة
         sed -i 's/moduleDescription = "/moduleDescription = "(com.miniclip.eightballpool) /g' module.gradle
         sed -i "s/com.game.packagename/com.miniclip.eightballpool/g" module/src/main/cpp/game.h
+        # بدء البناء
         ./gradlew :module:assembleRelease
-    - name: Upload Dumper
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Zygisk-Dumper-8BP-2026
+        # التصحيح هنا: أشرنا للمجلد وليس لملف مضغوط
         path: out/magisk_module_release/
