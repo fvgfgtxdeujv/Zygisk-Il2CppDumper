@@ -2,8 +2,8 @@ name: Build
 on:
   workflow_dispatch:
       inputs:
-        package_name:
-          description: "Package name of the game:"
+        package_name:明日方舟日服
+          description:"com.YoStarJP.Arknights:"
           required: true
 
 jobs:
