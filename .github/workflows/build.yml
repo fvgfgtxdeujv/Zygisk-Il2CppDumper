@@ -1,31 +1,31 @@
-name: Build
-on:
-  workflow_dispatch:
-      inputs:
-        package_name:
-          description: "Package name of the game:"
-          required: true
+名字: 建设
+在:
+工作流_调度:
+输入:
+包名:
+描述: "com.YoStarJP.Arknights:"
+需要: 真实的
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 11
-        cache: gradle
-    - name: Build and replace package name
-      run: |
-        chmod +x ./gradlew
-        sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
-        sed -i "s/com.game.packagename/${{ github.event.inputs.package_name }}/g" module/src/main/cpp/game.h
-        ./gradlew :module:assembleRelease
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: zygisk-il2cppdumper
-        path: out/magisk_module_release/
+工作:
+建设:
+连续运行: Ubuntu-最新版
+步伐:
+    - 名字: 结帐代码
+使用: 动作/签出@v4
+    - 名字: 设置Java 语言(一种计算机语言，尤用于创建网站)
+使用: 操作/设置-java@v4
+随着:
+分布: 特穆林
+Java语言（一种计算机语言，尤用于创建网站）版本: 11
+隐藏物: 格拉德勒
+    - 名字: 构建和替换包名
+奔跑: |
+chmod +x ./gradlew
+sed-I s/模块描述="/模块描述= "($ { {github .事件。投入.包_名称} })/克模块。格拉德勒
+sed-I s/com .游戏。包名/${ {github .事件。投入.包_名称} }/g module/src/main/CPP/game . h
+。/grad Lew:模块:汇编器易用性
+    - 名字: 上传工件
+使用: 动作/上传-工件@v4
+随着:
+名字: zygisk-il2cppdumper
+小路: out/magisk_module_release/
