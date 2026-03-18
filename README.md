@@ -1,7 +1,9 @@
-# Zygisk-Il2CppDumper
+# Zygisk-Il2CppDumper (Dev Branch - Config File Version)
 
 Zygisk版Il2CppDumper，在Unity游戏运行时dump il2cpp元数据，能够绕过各种保护、加密和混淆机制。
 
+> **分支说明**：这是开发分支（dev），支持配置文件管理多个目标包名。如需使用传统的硬编码包名版本，请切换到`master`分支。
+> 
 > **基于原项目修改**：[Perfare/Zygisk-Il2CppDumper](https://github.com/Perfare/Zygisk-Il2CppDumper)
 > 
 > **主要改进**：支持通过配置文件管理多个目标包名，无需重新编译即可修改目标应用。
