@@ -1,7 +1,7 @@
 name: Auto Build (Dev Branch)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # 手动触发，不需要输入参数
     inputs:
       skip_cache:
         description: 'Skip cache restoration'
@@ -9,9 +9,9 @@ on:
         default: false
         type: boolean
   push:
-    branches: [ dev ]
+    branches: [ dev ]  # 推送到dev分支时自动触发
   pull_request:
-    branches: [ dev ]
+    branches: [ dev ]  # 向dev分支提交PR时触发
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -27,15 +27,11 @@ jobs:
         ref: dev  # 使用dev分支
     
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3.2.2
+      uses: android-actions/setup-android@v4
       with:
-        cmdline-tools-version: 11076708  # 使用最新的cmdline-tools版本
-        accept-android-sdk-licenses: true  # 自动接受许可证
-        packages: >-
-          platform-tools
-          platforms;android-34
-          build-tools;34.0.0
-          ndk;26.2.11394342
+        api-level: 34
+        build-tools-version: 34.0.0
+        ndk-version: 26.2.11394342
     
     - name: Set up Java
       uses: actions/setup-java@v4.8.0
