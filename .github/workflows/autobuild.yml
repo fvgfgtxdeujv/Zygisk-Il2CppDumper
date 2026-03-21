@@ -27,7 +27,7 @@ jobs:
         ref: dev  # 使用dev分支
     
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v4
+      uses: android-actions/setup-android@v3.2.2
       with:
         api-level: 34
         build-tools-version: 34.0.0
