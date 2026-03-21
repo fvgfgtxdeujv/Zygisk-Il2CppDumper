@@ -1,81 +1,110 @@
 name: Auto Build (Dev Branch)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # 手动触发，不需要输入参数
+    inputs:
+      skip_cache:
+        description: 'Skip cache restoration'
+        required: false
+        default: false
+        type: boolean
   push:
-    branches: [dev]
+    branches: [ dev ]  # 推送到dev分支时自动触发
   pull_request:
-    branches: [dev]
+    branches: [ dev ]  # 向dev分支提交PR时触发
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # 解决 Node.js 20 弃用警告
-    
+    environment: build
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
       with:
-        ref: dev
-        fetch-depth: 0  # 建议：获取完整历史，某些构建可能需要
+        ref: dev  # 使用dev分支
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v4
+      with:
+        api-level: 34
+        build-tools-version: 34.0.0
+        ndk-version: 26.2.11394342
     
     - name: Set up Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v4.8.0
       with:
         distribution: temurin
-        java-version: 17  # 建议：Android Gradle Plugin 8+ 需要 Java 17
-        cache: gradle
-    
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
+        java-version: 11
+        cache: ${{ github.event_name == 'push' && 'gradle' || '' }}
     
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3  # 官方推荐，优化 Gradle 缓存
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: 8.5
     
     - name: Build module
       run: |
         chmod +x ./gradlew
         echo "Building Zygisk-Il2CppDumper from dev branch..."
-        ./gradlew :module:assembleRelease --no-daemon --stacktrace
+        echo "Note: This build uses config file mode."
+        echo "Target packages should be configured in /data/adb/target_packages.txt"
+        ./gradlew :module:assembleRelease --stacktrace --no-daemon
+        echo "Build completed!"
     
-    - name: Verify output
+    - name: List output files
       run: |
-        echo "=== Build Output ==="
-        find . -name "*.zip" -o -name "*.apk" 2>/dev/null | head -20
-        
-        echo "=== Module Directory ==="
-        ls -la out/magisk_module_release/ 2>/dev/null || echo "Directory not found"
-    
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: zygisk-il2cppdumper-dev
-        path: out/magisk_module_release/
-        if-no-files-found: error
+        echo "Build output directory structure:"
+        ls -la out/ || echo "out/ directory not found"
+        find out/ -type f -name "*.zip" -o -name "*.apk" 2>/dev/null || echo "No output files found"
     
     - name: Generate build info
       run: |
-        cat > build-info.txt << 'EOF'
-        Build Summary
-        =============
-        Branch: dev
-        Commit: ${{ github.sha }}
-        Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        Workflow: ${{ github.workflow }}
-        
-        Features:
-        - Config file mode enabled
-        - Supports multiple target packages
-        
-        Usage:
-        1. Install module in Magisk
-        2. Create /data/adb/target_packages.txt
-        3. Add one package name per line
-        EOF
+        echo "Build Summary:" > build-info.txt
+        echo "==============" >> build-info.txt
+        echo "Branch: dev" >> build-info.txt
+        echo "Commit: ${{ github.sha }}" >> build-info.txt
+        echo "Build Date: $(date)" >> build-info.txt
+        echo "Workflow: ${{ github.workflow }}" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "Build Environment:" >> build-info.txt
+        echo "- Node.js 24 (enforced)" >> build-info.txt
+        echo "- Android SDK API 34" >> build-info.txt
+        echo "- NDK 26.2.11394342" >> build-info.txt
+        echo "- Java 11 (Temurin)" >> build-info.txt
+        echo "- Gradle 8.5" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "Features:" >> build-info.txt
+        echo "- Config file mode enabled" >> build-info.txt
+        echo "- Supports multiple target packages" >> build-info.txt
+        echo "- No hardcoded package names" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "Usage:" >> build-info.txt
+        echo "1. Install the module in Magisk" >> build-info.txt
+        echo "2. Create /data/adb/target_packages.txt with target package names" >> build-info.txt
+        echo "3. Each line should contain one package name" >> build-info.txt
+        echo "4. Lines starting with # are treated as comments" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "GitHub Actions Details:" >> build-info.txt
+        echo "Run ID: ${{ github.run_id }}" >> build-info.txt
+        echo "Run Number: ${{ github.run_number }}" >> build-info.txt
+        echo "Triggered by: ${{ github.event_name }}" >> build-info.txt
     
-    - name: Upload build info
-      uses: actions/upload-artifact@v4
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        name: zygisk-il2cppdumper-dev-${{ github.sha }}
+        path: |
+          out/magisk_module_release/
+          build-info.txt
+        if-no-files-found: error
+        retention-days: 7
+    
+    - name: Upload build info separately
+      uses: actions/upload-artifact@v4.6.0
       with:
         name: build-info
         path: build-info.txt
+        retention-days: 30
