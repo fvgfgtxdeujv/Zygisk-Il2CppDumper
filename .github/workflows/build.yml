@@ -1,0 +1,147 @@
+name: Classic Build (Hardcoded Mode)
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: "Package name of the target game/app"
+        required: true
+        type: string
+        default: "com.example.game"
+      skip_cache:
+        description: "Skip cache restoration (if experiencing cache errors)"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: build
+    steps:
+    - name: 📦 Checkout repository
+      uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: 1
+    
+    - name: ⚙️ Setup Android SDK
+      uses: android-actions/setup-android@v4
+      with:
+        api-level: 34
+        build-tools-version: 34.0.0
+        ndk-version: 26.2.11394342
+    
+    - name: ☕ Set up Java
+      uses: actions/setup-java@v4.8.0
+      with:
+        distribution: temurin
+        java-version: 17
+        cache: ${{ !inputs.skip_cache && 'gradle' || '' }}
+    
+    - name: 🛠️ Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: 8.5
+    
+    - name: 🔧 Replace package name in source files
+      run: |
+        echo "📝 Replacing hardcoded package name with: ${{ github.event.inputs.package_name }}"
+        echo "📍 Original value: com.game.packagename"
+        
+        # Update module description in module.gradle
+        if grep -q 'moduleDescription = "' module.gradle; then
+          sed -i 's/moduleDescription = "/moduleDescription = "(${{ github.event.inputs.package_name }}) /g' module.gradle
+          echo "✅ Updated module.gradle"
+          echo "   New module description: (${{ github.event.inputs.package_name }}) Zygisk-Il2CppDumper"
+        else
+          echo "⚠️  moduleDescription not found in module.gradle"
+        fi
+        
+        # Update package name in game.h
+        if grep -q 'com.game.packagename' module/src/main/cpp/game.h; then
+          sed -i "s/com.game.packagename/${{ github.event.inputs.package_name }}/g" module/src/main/cpp/game.h
+          echo "✅ Updated game.h"
+          echo "   New package name: ${{ github.event.inputs.package_name }}"
+        else
+          echo "⚠️  com.game.packagename not found in game.h"
+          echo "📄 Current game.h content:"
+          cat module/src/main/cpp/game.h
+        fi
+        
+        echo "📋 Verification:"
+        echo "module.gradle line with description:"
+        grep 'moduleDescription = "' module.gradle || echo "Not found"
+        echo "game.h content:"
+        cat module/src/main/cpp/game.h
+    
+    - name: 🏗️ Build Magisk module
+      run: |
+        chmod +x ./gradlew
+        echo "🚀 Building Zygisk-Il2CppDumper for package: ${{ github.event.inputs.package_name }}"
+        echo "📖 Note: This build uses HARDCODED mode (single package)"
+        echo "       For multi-package support, use dev branch with config file mode"
+        ./gradlew :module:assembleRelease --stacktrace --no-daemon
+        echo "🎉 Build completed successfully!"
+    
+    - name: 📊 List build outputs
+      run: |
+        echo "📁 Build output directory structure:"
+        ls -la out/ || echo "out/ directory not found"
+        echo ""
+        echo "📦 Generated artifacts:"
+        find out/ -type f -name "*.zip" -o -name "*.apk" 2>/dev/null || echo "No output files found"
+    
+    - name: 📝 Generate build information
+      run: |
+        echo "🔄 Zygisk-Il2CppDumper Build Summary" > build-info.txt
+        echo "=====================================" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "📦 Build Details:" >> build-info.txt
+        echo "-----------------" >> build-info.txt
+        echo "Target Package: ${{ github.event.inputs.package_name }}" >> build-info.txt
+        echo "Build Mode: Hardcoded (Single Package)" >> build-info.txt
+        echo "Build Date: $(date)" >> build-info.txt
+        echo "Commit: ${{ github.sha }}" >> build-info.txt
+        echo "Workflow: ${{ github.workflow }}" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "⚙️ Build Environment:" >> build-info.txt
+        echo "--------------------" >> build-info.txt
+        echo "Node.js: 24 (enforced)" >> build-info.txt
+        echo "Android SDK: API 34" >> build-info.txt
+        echo "NDK: 26.2.11394342" >> build-info.txt
+        echo "Java: 17 (Temurin)" >> build-info.txt
+        echo "Gradle: 8.5" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "🚀 Usage Instructions:" >> build-info.txt
+        echo "----------------------" >> build-info.txt
+        echo "1. Install the generated module in Magisk" >> build-info.txt
+        echo "2. Module is configured for: ${{ github.event.inputs.package_name }}" >> build-info.txt
+        echo "3. Start the target app to generate dump.cs" >> build-info.txt
+        echo "4. Output location: /data/data/${{ github.event.inputs.package_name }}/files/dump.cs" >> build-info.txt
+        echo "" >> build-info.txt
+        echo "📋 GitHub Actions Details:" >> build-info.txt
+        echo "-------------------------" >> build-info.txt
+        echo "Run ID: ${{ github.run_id }}" >> build-info.txt
+        echo "Run Number: ${{ github.run_number }}" >> build-info.txt
+        echo "Triggered by: ${{ github.event_name }}" >> build-info.txt
+        echo "Manual Input: ${{ github.event.inputs.package_name }}" >> build-info.txt
+    
+    - name: 📤 Upload build artifacts
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        name: zygisk-il2cppdumper-${{ github.event.inputs.package_name }}
+        path: |
+          out/magisk_module_release/
+          build-info.txt
+        if-no-files-found: error
+        retention-days: 7
+    
+    - name: 📄 Upload build info separately
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        name: build-info-${{ github.event.inputs.package_name }}
+        path: build-info.txt
+        retention-days: 30
