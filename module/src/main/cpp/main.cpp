@@ -46,8 +46,8 @@ private:
     size_t length;
 
     void preSpecialize(const char *package_name, const char *app_data_dir) {
-        if (is_target_package(package_name)) {
-            LOGI("detect target package: %s", package_name);
+        if (strcmp(package_name, GamePackageName) == 0) {
+            LOGI("detect game: %s", package_name);
             enable_hack = true;
             game_data_dir = new char[strlen(app_data_dir) + 1];
             strcpy(game_data_dir, app_data_dir);

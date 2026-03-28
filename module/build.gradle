@@ -7,8 +7,9 @@ apply plugin: 'com.android.library'
 apply from: file(rootProject.file('module.gradle'))
 
 android {
-    compileSdkVersion rootProject.ext.targetSdkVersion
-    ndkVersion '25.2.9519653'
+    namespace "io.github.fvgfgtxdeujv.zygisk-il2cppdumper"
+    compileSdk rootProject.ext.targetSdkVersion
+    ndkVersion '26.2.11394342'
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
