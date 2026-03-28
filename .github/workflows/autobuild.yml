@@ -1,7 +1,7 @@
 name: Auto Build (Dev Branch)
 
 on:
-  workflow_dispatch:  # 手动触发，不需要输入参数
+  workflow_dispatch:
     inputs:
       skip_cache:
         description: 'Skip cache restoration'
@@ -9,9 +9,9 @@ on:
         default: false
         type: boolean
   push:
-    branches: [ dev ]  # 推送到dev分支时自动触发
+    branches: [ dev ]
   pull_request:
-    branches: [ dev ]  # 向dev分支提交PR时触发
+    branches: [ dev ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
