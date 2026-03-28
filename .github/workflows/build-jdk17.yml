@@ -1,4 +1,4 @@
-name: Classic Build (Hardcoded Mode)
+name: JDK 17 Hardcoded Beta
 
 on:
   workflow_dispatch:
