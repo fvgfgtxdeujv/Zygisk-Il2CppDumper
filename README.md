@@ -10,7 +10,7 @@ Zygisk版Il2CppDumper，在Unity游戏运行时dump il2cpp元数据，能够绕�
 
 ## ✨ 新特性
 
-- **配置文件支持**：通过 `/data/adb/target_packages.txt` 管理目标包名
+- **配置文件支持**：通过 `/data/adb/modules/zygisk_il2cppdumper/target_packages.txt` 管理目标包名
 - **多包名支持**：一行一个包名，支持监控多个应用
 - **热配置**：修改配置文件无需重新编译模块
 - **向后兼容**：保持原有功能，仅扩展配置方式
@@ -24,12 +24,13 @@ Zygisk版Il2CppDumper，在Unity游戏运行时dump il2cpp元数据，能够绕�
 
 ### 使用步骤
 
-1. **准备配置文件**
+1. **编辑配置文件**
    ```bash
-   # 创建配置文件（需要root权限）
+   # 模块安装后会释放默认配置文件到：
+   # /data/adb/modules/zygisk_il2cppdumper/target_packages.txt
    su
-   echo "com.example.game1" > /data/adb/target_packages.txt
-   echo "com.example.game2" >> /data/adb/target_packages.txt
+   echo "com.example.game1" > /data/adb/modules/zygisk_il2cppdumper/target_packages.txt
+   echo "com.example.game2" >> /data/adb/modules/zygisk_il2cppdumper/target_packages.txt
    ```
 
 2. **构建模块**
@@ -57,7 +58,7 @@ Zygisk版Il2CppDumper，在Unity游戏运行时dump il2cpp元数据，能够绕�
 
 ### 配置文件位置
 ```
-/data/adb/target_packages.txt
+/data/adb/modules/zygisk_il2cppdumper/target_packages.txt
 ```
 
 ### 文件格式
@@ -129,10 +130,21 @@ cd Zygisk-Il2CppDumper
 ...
 ```
 
+### dump 日志过滤
+模块在开始写出和结束写出 `dump.cs` 时会输出带特殊标识的日志，便于使用 LogFox/logcat 过滤：
+```text
+ZID_DUMP_CS
+```
+示例过滤命令：
+```bash
+logcat | grep ZID_DUMP_CS
+```
+日志中会包含 `START`、`WRITE`、`END` 状态、输出路径以及已收集的类型数量。
+
 ## ❓ 常见问题
 
 ### Q1: 配置文件不存在怎么办？
-A: 如果 `/data/adb/target_packages.txt` 不存在，模块将不会hook任何应用，处于静默状态。
+A: 如果 `/data/adb/modules/zygisk_il2cppdumper/target_packages.txt` 不存在，模块将不会hook任何应用，处于静默状态。正常安装模块时会释放默认配置文件。
 
 ### Q2: 配置文件为空或只有注释行？
 A: 模块不会hook任何应用，与配置文件不存在的情况相同。
@@ -148,7 +160,7 @@ A: 不需要重启设备，但需要重启目标应用才能应用新配置。
 
 ## ⚠️ 注意事项
 
-1. **权限要求**：配置文件路径 `/data/adb/` 需要root权限访问
+1. **权限要求**：配置文件路径 `/data/adb/modules/zygisk_il2cppdumper/` 需要root权限访问
 2. **文件编码**：建议使用UTF-8编码，避免特殊字符问题
 3. **包名验证**：请确保包名拼写正确，区分大小写
 4. **安全考虑**：配置文件中的包名将全部被hook，请谨慎配置

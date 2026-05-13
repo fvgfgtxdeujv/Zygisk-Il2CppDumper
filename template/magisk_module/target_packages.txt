@@ -1,0 +1,5 @@
+# Zygisk-Il2CppDumper 目标包名配置
+# 文件安装位置：/data/adb/modules/zygisk_il2cppdumper/target_packages.txt
+# 每行一个包名，支持 # 开头的注释行。
+# 示例：
+# com.example.game

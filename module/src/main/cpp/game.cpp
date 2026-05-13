@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cstring>
 
-#define CONFIG_PATH "/data/adb/target_packages.txt"
+#define CONFIG_PATH "/data/adb/modules/zygisk_il2cppdumper/target_packages.txt"
 
 // 缓存包名列表
 static std::vector<std::string> target_packages;

@@ -25,6 +25,9 @@
 
 static uint64_t il2cpp_base = 0;
 
+// LogFox/logcat 过滤标识：搜索 ZID_DUMP_CS 即可定位 dump.cs 开始/结束日志。
+#define DUMP_CS_LOG_MARKER "ZID_DUMP_CS"
+
 void init_il2cpp_api(void *handle) {
 #define DO_API(r, n, p) {                      \
     n = (r (*) p)xdl_sym(handle, #n, nullptr); \
@@ -344,6 +347,7 @@ void il2cpp_api_init(void *handle) {
 }
 
 void il2cpp_dump(const char *outDir) {
+    LOGI("%s START dump.cs outDir=%s", DUMP_CS_LOG_MARKER, outDir ? outDir : "<null>");
     LOGI("dumping...");
     size_t size;
     auto domain = il2cpp_domain_get();
@@ -418,6 +422,7 @@ void il2cpp_dump(const char *outDir) {
     }
     LOGI("write dump file");
     auto outPath = std::string(outDir).append("/files/dump.cs");
+    LOGI("%s WRITE dump.cs path=%s classes=%zu", DUMP_CS_LOG_MARKER, outPath.c_str(), outPuts.size());
     std::ofstream outStream(outPath);
     outStream << imageOutput.str();
     auto count = outPuts.size();
@@ -425,5 +430,6 @@ void il2cpp_dump(const char *outDir) {
         outStream << outPuts[i];
     }
     outStream.close();
+    LOGI("%s END dump.cs path=%s classes=%zu", DUMP_CS_LOG_MARKER, outPath.c_str(), outPuts.size());
     LOGI("dump done!");
 }
