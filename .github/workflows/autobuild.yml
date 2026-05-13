@@ -20,7 +20,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4.2.2
       with:
-        ref: dev  # 使用dev分支
+        ref: dev
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v4
